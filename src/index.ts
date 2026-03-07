@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import {
   CallToolRequestSchema,
   ErrorCode,
@@ -8,6 +9,7 @@ import {
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import axios, { AxiosInstance } from 'axios';
+import { parseCustomHeaders } from "./headers.js";
 import winston from 'winston';
 import path from 'path';
 import os from 'os';
@@ -44,6 +46,7 @@ interface BitbucketConfig {
   defaultProject?: string;
   maxLinesPerFile?: number;
   readOnly?: boolean;
+  customHeaders?: Record<string, string>;
 }
 
 interface RepositoryParams {
@@ -95,6 +98,14 @@ interface SearchOptions extends ListOptions {
   type?: 'code' | 'file';
 }
 
+interface SearchResultItem {
+  repository: string;
+  file: string;
+  hitCount?: number;
+  pathMatches?: string[];
+  hitContexts?: string[];
+}
+
 interface FileContentOptions extends ListOptions {
   project?: string;
   repository?: string;
@@ -123,12 +134,23 @@ interface PullRequestListOptions extends ListOptions {
   direction?: 'INCOMING' | 'OUTGOING';
 }
 
-class BitbucketServer {
+export interface BitbucketServerOptions {
+  baseUrl?: string;
+  token?: string;
+  username?: string;
+  password?: string;
+  defaultProject?: string;
+  maxLinesPerFile?: number;
+  readOnly?: boolean;
+  customHeaders?: Record<string, string>;
+}
+
+export class BitbucketServer {
   private readonly server: Server;
   private readonly api: AxiosInstance;
   private readonly config: BitbucketConfig;
 
-  constructor() {
+  constructor(options?: BitbucketServerOptions) {
     this.server = new Server(
       {
         name: 'bitbucket-server-mcp-server',
@@ -143,15 +165,16 @@ class BitbucketServer {
 
     // Configuration initiale à partir des variables d'environnement
     this.config = {
-      baseUrl: process.env.BITBUCKET_URL ?? '',
-      token: process.env.BITBUCKET_TOKEN,
-      username: process.env.BITBUCKET_USERNAME,
-      password: process.env.BITBUCKET_PASSWORD,
-      defaultProject: process.env.BITBUCKET_DEFAULT_PROJECT,
+      baseUrl: options?.baseUrl ?? process.env.BITBUCKET_URL ?? '',
+      token: options?.token ?? process.env.BITBUCKET_TOKEN,
+      username: options?.username ?? process.env.BITBUCKET_USERNAME,
+      password: options?.password ?? process.env.BITBUCKET_PASSWORD,
+      defaultProject: options?.defaultProject ?? process.env.BITBUCKET_DEFAULT_PROJECT,
       maxLinesPerFile: process.env.BITBUCKET_DIFF_MAX_LINES_PER_FILE 
         ? parseInt(process.env.BITBUCKET_DIFF_MAX_LINES_PER_FILE, 10) 
         : undefined,
-      readOnly: process.env.BITBUCKET_READ_ONLY === 'true'
+      readOnly: options?.readOnly ?? process.env.BITBUCKET_READ_ONLY === 'true',
+      customHeaders: options?.customHeaders ?? parseCustomHeaders(process.env.BITBUCKET_CUSTOM_HEADERS),
     };
 
     if (!this.config.baseUrl) {
@@ -165,9 +188,10 @@ class BitbucketServer {
     // Configuration de l'instance Axios
     this.api = axios.create({
       baseURL: `${this.config.baseUrl}/rest/api/1.0`,
-      headers: this.config.token 
-        ? { Authorization: `Bearer ${this.config.token}` }
-        : {},
+      headers: {
+        ...(this.config.token ? { Authorization: `Bearer ${this.config.token}` } : {}),
+        ...this.config.customHeaders,
+      },
       auth: this.config.username && this.config.password
         ? { username: this.config.username, password: this.config.password }
         : undefined,
@@ -178,11 +202,15 @@ class BitbucketServer {
     this.server.onerror = (error) => logger.error('[MCP Error]', error);
   }
 
+  async connect(transport: Transport): Promise<void> {
+    await this.server.connect(transport);
+  }
+
   private isPullRequestInput(args: unknown): args is PullRequestInput {
     const input = args as Partial<PullRequestInput>;
     return typeof args === 'object' &&
       args !== null &&
-      typeof input.project === 'string' &&
+      (input.project === undefined || typeof input.project === 'string') &&
       typeof input.repository === 'string' &&
       typeof input.title === 'string' &&
       typeof input.sourceBranch === 'string' &&
@@ -1285,7 +1313,7 @@ class BitbucketServer {
         showing: codeResults.values?.length || 0,
         isLastPage: codeResults.isLastPage || true,
         nextStart: codeResults.nextStart || null,
-        results: codeResults.values?.map((result: any) => ({
+        results: codeResults.values?.map((result: SearchResultItem) => ({
           repository: result.repository,
           file: result.file,
           hitCount: result.hitCount || 0,
@@ -1687,8 +1715,11 @@ class BitbucketServer {
   }
 }
 
-const server = new BitbucketServer();
-server.run().catch((error) => {
-  logger.error('Server error', error);
-  process.exit(1);
-});
+// Entry point — only runs when this module is executed directly, not when imported.
+if (process.argv[1] === new URL(import.meta.url).pathname) {
+  const server = new BitbucketServer();
+  server.run().catch((error) => {
+    logger.error('Server error', error);
+    process.exit(1);
+  });
+}
