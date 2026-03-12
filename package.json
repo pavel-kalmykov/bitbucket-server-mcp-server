@@ -5,12 +5,15 @@
   "type": "module",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "files": [
+    "build",
+    "!build/__tests__"
+  ],
   "bin": {
     "bitbucket-server-mcp": "./build/index.js"
   },
   "scripts": {
-    "build": "tsc && node -e \"if (process.platform !== 'win32') require('child_process').execSync('chmod +x build/index.js')\"",
-    "postinstall": "node -e \"const fs=require('fs'); if (process.platform !== 'win32' && fs.existsSync('build/index.js')) require('child_process').execSync('chmod +x build/index.js')\"",
+    "build": "tsc",
     "start": "node build/index.js",
     "dev": "tsc -w",
     "dev:server": "npm run build && npx @modelcontextprotocol/inspector -e DEBUG=true node build/index.js",
