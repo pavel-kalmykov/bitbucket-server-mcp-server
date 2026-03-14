@@ -1,3 +1,10 @@
+## [0.1.3](https://github.com/pavel-kalmykov/bitbucket-server-mcp-server/compare/v0.1.2...v0.1.3) (2026-03-14)
+
+
+### Bug Fixes
+
+* export createSandboxServer and guard import.meta.url for Smithery scan ([0c3189b](https://github.com/pavel-kalmykov/bitbucket-server-mcp-server/commit/0c3189bb5949b5a447d756e5bd5c2541a6c1a514))
+
 ## [0.1.2](https://github.com/pavel-kalmykov/bitbucket-server-mcp-server/compare/v0.1.1...v0.1.2) (2026-03-13)
 
 
