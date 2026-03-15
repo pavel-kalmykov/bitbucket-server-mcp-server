@@ -103,7 +103,13 @@ jobs:
           path: build/
 
       - name: Publish preview
+        id: publish
         run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "NPM_TOKEN not configured, skipping preview publish"
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           PR_VERSION="0.0.0-pr.${{ github.event.number }}.$(git rev-parse --short HEAD)"
           npm version "$PR_VERSION" --no-git-tag-version
           npm publish --tag "pr-${{ github.event.number }}" --access public
@@ -111,6 +117,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Comment on PR
+        if: steps.publish.outputs.skipped != 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -154,6 +161,11 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Remove dist-tag
-        run: npm dist-tag rm @garc33/bitbucket-server-mcp-server "pr-${{ github.event.number }}" || true
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "NPM_TOKEN not configured, nothing to clean up"
+            exit 0
+          fi
+          npm dist-tag rm @garc33/bitbucket-server-mcp-server "pr-${{ github.event.number }}" || true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
