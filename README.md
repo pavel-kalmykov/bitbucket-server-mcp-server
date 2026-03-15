@@ -43,7 +43,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
   "mcpServers": {
     "bitbucket": {
       "command": "npx",
-      "args": ["-y", "bitbucket-server"],
+      "args": ["-y", "@garc33/bitbucket-server-mcp-server"],
       "env": {
         "BITBUCKET_URL": "https://your-bitbucket-server.com",
         "BITBUCKET_TOKEN": "your-access-token"
@@ -59,7 +59,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 claude mcp add bitbucket \
   -e BITBUCKET_URL=https://your-bitbucket-server.com \
   -e BITBUCKET_TOKEN=your-token \
-  -- npx -y bitbucket-server
+  -- npx -y @garc33/bitbucket-server-mcp-server
 ```
 
 ### VS Code
@@ -71,7 +71,7 @@ Add to your workspace `.vscode/mcp.json`:
   "servers": {
     "bitbucket": {
       "command": "npx",
-      "args": ["-y", "bitbucket-server"],
+      "args": ["-y", "@garc33/bitbucket-server-mcp-server"],
       "env": {
         "BITBUCKET_URL": "https://your-bitbucket-server.com",
         "BITBUCKET_TOKEN": "your-access-token"

@@ -51,7 +51,7 @@ startCommand:
     |-
     (config) => ({
       command: 'npx',
-      args: ['-y', 'bitbucket-server'],
+      args: ['-y', '@garc33/bitbucket-server-mcp-server'],
       env: {
         BITBUCKET_URL: config.bitbucketUrl,
         BITBUCKET_TOKEN: config.bitbucketToken,

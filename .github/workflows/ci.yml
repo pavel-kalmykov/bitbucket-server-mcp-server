@@ -118,7 +118,7 @@ jobs:
             const sha = context.sha.substring(0, 7);
             const version = `0.0.0-pr.${prNumber}.${sha}`;
             const tag = `pr-${prNumber}`;
-            const body = `## Preview published\n\nInstall this PR's build:\n\`\`\`\nnpx -y bitbucket-server@${tag}\n\`\`\`\n\nVersion: \`${version}\``;
+            const body = `## Preview published\n\nInstall this PR's build:\n\`\`\`\nnpx -y @garc33/bitbucket-server-mcp-server@${tag}\n\`\`\`\n\nVersion: \`${version}\``;
 
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
@@ -154,6 +154,6 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Remove dist-tag
-        run: npm dist-tag rm bitbucket-server "pr-${{ github.event.number }}" || true
+        run: npm dist-tag rm @garc33/bitbucket-server-mcp-server "pr-${{ github.event.number }}" || true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
