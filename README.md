@@ -34,16 +34,6 @@ Install automatically for Claude Desktop via [Smithery](https://smithery.ai/serv
 npx -y @smithery/cli install @garc33/bitbucket-server-mcp-server --client claude
 ```
 
-### Manual
-
-Clone the repository, install dependencies and build:
-
-```bash
-npm install && npm run build
-```
-
-Then add to your MCP client configuration using the path to the built file.
-
 ### Claude Desktop
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
@@ -52,8 +42,8 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 {
   "mcpServers": {
     "bitbucket": {
-      "command": "node",
-      "args": ["/path/to/bitbucket-server-mcp-server/build/index.js"],
+      "command": "npx",
+      "args": ["-y", "bitbucket-server"],
       "env": {
         "BITBUCKET_URL": "https://your-bitbucket-server.com",
         "BITBUCKET_TOKEN": "your-access-token"
@@ -69,7 +59,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 claude mcp add bitbucket \
   -e BITBUCKET_URL=https://your-bitbucket-server.com \
   -e BITBUCKET_TOKEN=your-token \
-  -- node /path/to/bitbucket-server-mcp-server/build/index.js
+  -- npx -y bitbucket-server
 ```
 
 ### VS Code
@@ -80,8 +70,8 @@ Add to your workspace `.vscode/mcp.json`:
 {
   "servers": {
     "bitbucket": {
-      "command": "node",
-      "args": ["/path/to/bitbucket-server-mcp-server/build/index.js"],
+      "command": "npx",
+      "args": ["-y", "bitbucket-server"],
       "env": {
         "BITBUCKET_URL": "https://your-bitbucket-server.com",
         "BITBUCKET_TOKEN": "your-access-token"
