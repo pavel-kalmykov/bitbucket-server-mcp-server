@@ -5,11 +5,11 @@ import { test, describeBitbucket } from "./e2e-suite.js";
 describeBitbucket("merge-checks", () => {
   test("manage_merge_checks returns an error for missing plugin", async ({
     mcp,
-    scenario,
+    repo,
   }) => {
     const result = await callRaw(mcp.client, "manage_merge_checks", {
-      project: scenario.projectKey,
-      repository: scenario.repoSlug,
+      project: repo.projectKey,
+      repository: repo.repoSlug,
       hookKey:
         "com.atlassian.bitbucket.server.bitbucket-build:requiredBuildsMergeCheck",
       settings: { requiredBuilds: 1 },

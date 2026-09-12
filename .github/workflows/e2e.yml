@@ -49,4 +49,4 @@ jobs:
       - name: E2E suite (${{ matrix.version }})
         env:
           BITBUCKET_TIMEBOMB_LICENSE: ${{ secrets.BITBUCKET_TIMEBOMB_LICENSE }}
-        run: npm run test:e2e -- --project e2e-${{ matrix.version }}
+        run: npm run test:e2e:version -- ${{ matrix.version }}

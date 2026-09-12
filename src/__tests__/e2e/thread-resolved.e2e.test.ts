@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 import { atLeast, THREAD_RESOLVED_SINCE } from "./versions.js";
-import { createComment } from "./bootstrap.js";
+import type { KyInstance } from "ky";
 import { callAndParse } from "../tool-test-utils.js";
 import { test, describeBitbucket } from "./e2e-suite.js";
 import type { RestComment } from "../../generated/types.js";
@@ -9,6 +9,25 @@ type CommentPayload = Pick<
   RestComment,
   "id" | "version" | "state" | "severity"
 > & { threadResolved?: boolean };
+
+type CreateCommentArgs = {
+  api: KyInstance;
+  pr: { projectKey: string; repoSlug: string; prId: number };
+  text: string;
+};
+
+async function createComment({
+  api,
+  pr,
+  text,
+}: CreateCommentArgs): Promise<CommentPayload> {
+  return api
+    .post(
+      `projects/${pr.projectKey}/repos/${pr.repoSlug}/pull-requests/${pr.prId}/comments`,
+      { json: { text } },
+    )
+    .json<CommentPayload>();
+}
 
 /**
  * Two mirrored suites (one per supported / unsupported partition) keep
@@ -24,31 +43,32 @@ type CommentPayload = Pick<
  * used for setup (creating the seed comment, provisioning the repo),
  * which the MCP does not expose as tools.
  */
+
 describeBitbucket(
   "threadResolved supported",
   () => {
     test("fresh comment starts with threadResolved=false", async ({
       bb,
-      scenario,
+      pr,
     }) => {
-      const c = await createComment(bb.api, scenario, "needs review");
+      const c = await createComment({ api: bb.api, pr, text: "needs review" });
       expect(c.threadResolved).toBe(false);
     });
 
     test("manage_comment edit {threadResolved:true} flips the flag without touching state/severity", async ({
       bb,
       mcp,
-      scenario,
+      pr,
     }) => {
-      const c = await createComment(bb.api, scenario, "please look");
+      const c = await createComment({ api: bb.api, pr, text: "please look" });
       const updated = await callAndParse<CommentPayload>(
         mcp.client,
         "manage_comment",
         {
           action: "edit",
-          project: scenario.projectKey,
-          repository: scenario.repoSlug,
-          prId: scenario.prId,
+          project: pr.projectKey,
+          repository: pr.repoSlug,
+          prId: pr.prId,
           commentId: c.id,
           version: c.version,
           threadResolved: true,
@@ -62,9 +82,9 @@ describeBitbucket(
     test("manage_comment edit {state:RESOLVED, threadResolved:true} updates both in one call", async ({
       bb,
       mcp,
-      scenario,
+      pr,
     }) => {
-      const c = await createComment(bb.api, scenario, "fix this");
+      const c = await createComment({ api: bb.api, pr, text: "fix this" });
       // Promote to BLOCKER first so `state: RESOLVED` has something to
       // toggle; both steps go through the MCP tool.
       const blocker = await callAndParse<CommentPayload>(
@@ -72,9 +92,9 @@ describeBitbucket(
         "manage_comment",
         {
           action: "edit",
-          project: scenario.projectKey,
-          repository: scenario.repoSlug,
-          prId: scenario.prId,
+          project: pr.projectKey,
+          repository: pr.repoSlug,
+          prId: pr.prId,
           commentId: c.id,
           version: c.version,
           severity: "BLOCKER",
@@ -85,9 +105,9 @@ describeBitbucket(
         "manage_comment",
         {
           action: "edit",
-          project: scenario.projectKey,
-          repository: scenario.repoSlug,
-          prId: scenario.prId,
+          project: pr.projectKey,
+          repository: pr.repoSlug,
+          prId: pr.prId,
           commentId: c.id,
           version: blocker.version,
           state: "RESOLVED",
@@ -104,28 +124,25 @@ describeBitbucket(
 describeBitbucket(
   "threadResolved unsupported",
   () => {
-    test("fresh comment omits the threadResolved field", async ({
-      bb,
-      scenario,
-    }) => {
-      const c = await createComment(bb.api, scenario, "hey");
+    test("fresh comment omits the threadResolved field", async ({ bb, pr }) => {
+      const c = await createComment({ api: bb.api, pr, text: "hey" });
       expect(c.threadResolved).toBeUndefined();
     });
 
     test("manage_comment edit {threadResolved:true} is silently ignored (server returns 200, field absent)", async ({
       bb,
       mcp,
-      scenario,
+      pr,
     }) => {
-      const c = await createComment(bb.api, scenario, "check");
+      const c = await createComment({ api: bb.api, pr, text: "check" });
       const updated = await callAndParse<CommentPayload>(
         mcp.client,
         "manage_comment",
         {
           action: "edit",
-          project: scenario.projectKey,
-          repository: scenario.repoSlug,
-          prId: scenario.prId,
+          project: pr.projectKey,
+          repository: pr.repoSlug,
+          prId: pr.prId,
           commentId: c.id,
           version: c.version,
           threadResolved: true,

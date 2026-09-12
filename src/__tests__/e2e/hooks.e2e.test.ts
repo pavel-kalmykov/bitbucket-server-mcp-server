@@ -5,15 +5,15 @@ import { test, describeBitbucket } from "./e2e-suite.js";
 describeBitbucket("hooks", () => {
   test("manage_repository_hooks enable flips a bundled hook", async ({
     mcp,
-    scenario,
+    repo,
   }) => {
     const parsed = await callAndParse<{ enabled: boolean; hookKey: string }>(
       mcp.client,
       "manage_repository_hooks",
       {
         action: "enable",
-        project: scenario.projectKey,
-        repository: scenario.repoSlug,
+        project: repo.projectKey,
+        repository: repo.repoSlug,
         hookKey:
           "com.atlassian.bitbucket.server.bitbucket-bundled-hooks:force-push-hook",
       },
@@ -24,15 +24,15 @@ describeBitbucket("hooks", () => {
 
   test("manage_repository_hooks disable flips it back", async ({
     mcp,
-    scenario,
+    repo,
   }) => {
     const parsed = await callAndParse<{ enabled: boolean; hookKey: string }>(
       mcp.client,
       "manage_repository_hooks",
       {
         action: "disable",
-        project: scenario.projectKey,
-        repository: scenario.repoSlug,
+        project: repo.projectKey,
+        repository: repo.repoSlug,
         hookKey:
           "com.atlassian.bitbucket.server.bitbucket-bundled-hooks:force-push-hook",
       },

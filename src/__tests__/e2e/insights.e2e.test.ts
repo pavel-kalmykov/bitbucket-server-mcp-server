@@ -5,10 +5,10 @@ import { test, describeBitbucket } from "./e2e-suite.js";
 describeBitbucket("insights", () => {
   test("get_build_status returns result for a commit", async ({
     mcp,
-    scenario,
+    repo,
   }) => {
     const result = await callRaw(mcp.client, "get_build_status", {
-      commitId: scenario.mainCommitId,
+      commitId: repo.mainCommitId,
     });
 
     expect(result.isError).toBeFalsy();

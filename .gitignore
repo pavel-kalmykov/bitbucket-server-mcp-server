@@ -34,3 +34,4 @@ assets/
 .playwright-mcp/
 .fallow/
 .mcp.json
+.e2e-container-*.json

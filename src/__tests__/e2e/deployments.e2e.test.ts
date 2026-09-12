@@ -4,18 +4,15 @@ import { test, describeBitbucket } from "./e2e-suite.js";
 import type { Deployment } from "../../generated/types.js";
 
 describeBitbucket("deployments", () => {
-  test("create deployment returns the deployment", async ({
-    mcp,
-    scenario,
-  }) => {
+  test("create deployment returns the deployment", async ({ mcp, repo }) => {
     const parsed = await callAndParse<Deployment>(
       mcp.client,
       "manage_deployments",
       {
         action: "create",
-        project: scenario.projectKey,
-        repository: scenario.repoSlug,
-        commitId: scenario.mainCommitId,
+        project: repo.projectKey,
+        repository: repo.repoSlug,
+        commitId: repo.mainCommitId,
         deploymentSequenceNumber: 1,
         description: "E2E deploy",
         displayName: "Deploy 1",
@@ -38,16 +35,16 @@ describeBitbucket("deployments", () => {
 
   test("get deployment returns the created deployment", async ({
     mcp,
-    scenario,
+    repo,
   }) => {
     const parsed = await callAndParse<Deployment>(
       mcp.client,
       "manage_deployments",
       {
         action: "get",
-        project: scenario.projectKey,
-        repository: scenario.repoSlug,
-        commitId: scenario.mainCommitId,
+        project: repo.projectKey,
+        repository: repo.repoSlug,
+        commitId: repo.mainCommitId,
         key: "e2e-deploy-1",
         environmentKey: "e2e-env",
         deploymentSequenceNumber: 1,
@@ -58,15 +55,15 @@ describeBitbucket("deployments", () => {
     expect(parsed.state).toBe("IN_PROGRESS");
   });
 
-  test("delete deployment succeeds", async ({ mcp, scenario }) => {
+  test("delete deployment succeeds", async ({ mcp, repo }) => {
     const parsed = await callAndParse<{
       deleted: boolean;
       key: string;
     }>(mcp.client, "manage_deployments", {
       action: "delete",
-      project: scenario.projectKey,
-      repository: scenario.repoSlug,
-      commitId: scenario.mainCommitId,
+      project: repo.projectKey,
+      repository: repo.repoSlug,
+      commitId: repo.mainCommitId,
       key: "e2e-deploy-1",
       environmentKey: "e2e-env",
       deploymentSequenceNumber: 1,
@@ -76,12 +73,12 @@ describeBitbucket("deployments", () => {
     expect(parsed.key).toBe("e2e-deploy-1");
   });
 
-  test("get after delete returns error", async ({ mcp, scenario }) => {
+  test("get after delete returns error", async ({ mcp, repo }) => {
     const result = await callRaw(mcp.client, "manage_deployments", {
       action: "get",
-      project: scenario.projectKey,
-      repository: scenario.repoSlug,
-      commitId: scenario.mainCommitId,
+      project: repo.projectKey,
+      repository: repo.repoSlug,
+      commitId: repo.mainCommitId,
       key: "e2e-deploy-1",
       environmentKey: "e2e-env",
       deploymentSequenceNumber: 1,
@@ -92,27 +89,24 @@ describeBitbucket("deployments", () => {
 
   test("create without required fields returns error", async ({
     mcp,
-    scenario,
+    repo,
   }) => {
     const result = await callRaw(mcp.client, "manage_deployments", {
       action: "create",
-      project: scenario.projectKey,
-      repository: scenario.repoSlug,
-      commitId: scenario.mainCommitId,
+      project: repo.projectKey,
+      repository: repo.repoSlug,
+      commitId: repo.mainCommitId,
     });
 
     expect(result.isError).toBe(true);
   });
 
-  test("get without required params returns error", async ({
-    mcp,
-    scenario,
-  }) => {
+  test("get without required params returns error", async ({ mcp, repo }) => {
     const result = await callRaw(mcp.client, "manage_deployments", {
       action: "get",
-      project: scenario.projectKey,
-      repository: scenario.repoSlug,
-      commitId: scenario.mainCommitId,
+      project: repo.projectKey,
+      repository: repo.repoSlug,
+      commitId: repo.mainCommitId,
     });
 
     expect(result.isError).toBe(true);

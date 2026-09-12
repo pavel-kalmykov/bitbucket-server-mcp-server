@@ -13,14 +13,14 @@ describeBitbucket(
   () => {
     test("list_labels returns an empty list on a fresh repo", async ({
       mcp,
-      scenario,
+      repo,
     }) => {
       const parsed = await callAndParse<LabelsResponse>(
         mcp.client,
         "list_labels",
         {
-          project: scenario.projectKey,
-          repository: scenario.repoSlug,
+          project: repo.projectKey,
+          repository: repo.repoSlug,
         },
       );
 
@@ -28,11 +28,11 @@ describeBitbucket(
       expect(parsed.labels).toHaveLength(0);
     });
 
-    test("manage_labels add and remove works", async ({ mcp, scenario }) => {
+    test("manage_labels add and remove works", async ({ mcp, repo }) => {
       await callAndParse(mcp.client, "manage_labels", {
         action: "add",
-        project: scenario.projectKey,
-        repository: scenario.repoSlug,
+        project: repo.projectKey,
+        repository: repo.repoSlug,
         name: "e2e-test-label",
       });
 
@@ -40,8 +40,8 @@ describeBitbucket(
         mcp.client,
         "list_labels",
         {
-          project: scenario.projectKey,
-          repository: scenario.repoSlug,
+          project: repo.projectKey,
+          repository: repo.repoSlug,
         },
       );
 
@@ -50,8 +50,8 @@ describeBitbucket(
 
       await callAndParse(mcp.client, "manage_labels", {
         action: "remove",
-        project: scenario.projectKey,
-        repository: scenario.repoSlug,
+        project: repo.projectKey,
+        repository: repo.repoSlug,
         name: "e2e-test-label",
       });
 
@@ -59,8 +59,8 @@ describeBitbucket(
         mcp.client,
         "list_labels",
         {
-          project: scenario.projectKey,
-          repository: scenario.repoSlug,
+          project: repo.projectKey,
+          repository: repo.repoSlug,
         },
       );
 
@@ -75,11 +75,11 @@ describeBitbucket(
   () => {
     test("list_labels returns an error on unsupported versions", async ({
       mcp,
-      scenario,
+      repo,
     }) => {
       const result = await callRaw(mcp.client, "list_labels", {
-        project: scenario.projectKey,
-        repository: scenario.repoSlug,
+        project: repo.projectKey,
+        repository: repo.repoSlug,
       });
 
       expect(result.isError).toBe(true);

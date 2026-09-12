@@ -33,6 +33,7 @@
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "vitest --config vitest.config.e2e.ts --run",
+    "test:e2e:version": "npx tsx scripts/e2e-version.ts",
     "test:mutation": "stryker run",
     "check:deadcode": "fallow dead-code --fail-on-issues",
     "check:deadcode:types": "knip --include types,nsTypes",
