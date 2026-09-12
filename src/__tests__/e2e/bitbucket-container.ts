@@ -19,6 +19,10 @@ export interface StartedBitbucket {
   readonly version: string;
   /** ky instance with Basic auth + XSRF bypass pre-configured. */
   readonly api: KyInstance;
+  /** Docker container id; set when this instance started the container. */
+  readonly containerId?: string;
+  /** Host temp dir bind-mounted into the container. */
+  readonly sharedDir?: string;
   /** Tears down the container. */
   stop(): Promise<void>;
 }
@@ -140,7 +144,11 @@ export async function startBitbucket(
     .withStartupTimeout(420_000)
     .start();
 
-  const host = container.getHost();
+  // macOS Docker Desktop forwards ::1 connections through a slow userspace
+  // path: a cold client's first request to `localhost` can stall ~50s. The
+  // IPv4 loopback does not, so pin it whenever the host resolves there.
+  const host =
+    container.getHost() === "localhost" ? "127.0.0.1" : container.getHost();
   const port = container.getMappedPort(BITBUCKET_INTERNAL_PORT);
   const url = `http://${host}:${port}`;
 
@@ -151,6 +159,8 @@ export async function startBitbucket(
     admin: ADMIN,
     version: version.name,
     api,
+    containerId: container.getId(),
+    sharedDir: hostSharedDir,
     async stop() {
       // Bitbucket writes inside the bind mount as its internal
       // `bitbucket` user, so on Linux (GitHub Actions runners) the
@@ -167,5 +177,26 @@ export async function startBitbucket(
       await container.stop();
       await rm(hostSharedDir, { recursive: true, force: true });
     },
+  };
+}
+
+/**
+ * Attach to a container that an orchestrator script already started
+ * (`scripts/e2e-up.ts`): readiness is asserted again, but the lifecycle
+ * is not ours, so `stop` is a no-op. This is what keeps a single
+ * container per version alive across all test files despite vitest
+ * re-running worker-scoped fixtures per file.
+ */
+export async function attachStartedBitbucket(
+  url: string,
+  version: string,
+): Promise<StartedBitbucket> {
+  const api = await waitForAuthenticatedApi(url, 240_000);
+  return {
+    url,
+    admin: ADMIN,
+    version,
+    api,
+    async stop() {},
   };
 }

@@ -5,14 +5,14 @@ import { test, describeBitbucket } from "./e2e-suite.js";
 describeBitbucket("reviewer groups", () => {
   test("list_reviewer_groups returns empty list initially", async ({
     mcp,
-    scenario,
+    repo,
   }) => {
     const parsed = await callAndParse<unknown[]>(
       mcp.client,
       "list_reviewer_groups",
       {
-        project: scenario.projectKey,
-        repository: scenario.repoSlug,
+        project: repo.projectKey,
+        repository: repo.repoSlug,
       },
     );
 

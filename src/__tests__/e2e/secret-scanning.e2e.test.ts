@@ -8,16 +8,13 @@ const SECRET_SCANNING_SINCE = "8.5";
 describeBitbucket(
   "secret-scanning supported",
   () => {
-    test("list_secret_scanning_rules returns rules", async ({
-      mcp,
-      scenario,
-    }) => {
+    test("list_secret_scanning_rules returns rules", async ({ mcp, repo }) => {
       const parsed = await callAndParse<unknown[]>(
         mcp.client,
         "list_secret_scanning_rules",
         {
-          project: scenario.projectKey,
-          repository: scenario.repoSlug,
+          project: repo.projectKey,
+          repository: repo.repoSlug,
         },
       );
 
@@ -30,13 +27,10 @@ describeBitbucket(
 describeBitbucket(
   "secret-scanning unsupported",
   () => {
-    test("list_secret_scanning_rules returns error", async ({
-      mcp,
-      scenario,
-    }) => {
+    test("list_secret_scanning_rules returns error", async ({ mcp, repo }) => {
       const result = await callRaw(mcp.client, "list_secret_scanning_rules", {
-        project: scenario.projectKey,
-        repository: scenario.repoSlug,
+        project: repo.projectKey,
+        repository: repo.repoSlug,
       });
 
       expect(result.isError).toBe(true);

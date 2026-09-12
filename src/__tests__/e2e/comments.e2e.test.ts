@@ -3,15 +3,15 @@ import { callAndParse } from "../tool-test-utils.js";
 import { test, describeBitbucket } from "./e2e-suite.js";
 
 describeBitbucket("comments", () => {
-  test("manage_comment create adds a comment", async ({ mcp, scenario }) => {
+  test("manage_comment create adds a comment", async ({ mcp, pr }) => {
     const parsed = await callAndParse<{
       id: number;
       text: string;
     }>(mcp.client, "manage_comment", {
       action: "create",
-      project: scenario.projectKey,
-      repository: scenario.repoSlug,
-      prId: scenario.prId,
+      project: pr.projectKey,
+      repository: pr.repoSlug,
+      prId: pr.prId,
       text: "E2E smoke test comment",
     });
 

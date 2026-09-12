@@ -5,12 +5,12 @@ import { test, describeBitbucket } from "./e2e-suite.js";
 describeBitbucket("default reviewers", () => {
   test("list_default_reviewer_conditions returns array", async ({
     mcp,
-    scenario,
+    repo,
   }) => {
     const r = await callAndParse<unknown[]>(
       mcp.client,
       "list_default_reviewer_conditions",
-      { project: scenario.projectKey, repository: scenario.repoSlug },
+      { project: repo.projectKey, repository: repo.repoSlug },
     );
     expect(Array.isArray(r)).toBe(true);
   });
